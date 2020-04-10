@@ -237,7 +237,6 @@ Image LoadImage(const char *fileName)
 
         unsigned int dataSize = 0;
         unsigned char *fileData = LoadFileData(fileName, &dataSize);
-
         if (fileData != NULL)
         {
             int comp = 0;
@@ -259,13 +258,13 @@ Image LoadImage(const char *fileName)
     {
 #if defined(STBI_REQUIRED)
         unsigned int dataSize = 0;
-        unsigned char *fileData = LoadFileData(fileName, &dataSize);
+        unsigned char* fileData = LoadFileData(fileName, &dataSize);
 
+        stbi_set_flip_vertically_on_load(1);
         if (fileData != NULL)
         {
             int comp = 0;
             image.data = stbi_loadf_from_memory(fileData, dataSize, &image.width, &image.height, &comp, 0);
-
             image.mipmaps = 1;
 
             if (comp == 1) image.format = UNCOMPRESSED_R32;
