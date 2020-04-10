@@ -1655,6 +1655,126 @@ void SetMSAA(unsigned int level)
     }
 }
 
+Skybox InitSkybox(const char* texPath[])
+{
+    GLuint textureId;
+    GLuint VBO;
+    GLuint IBO;
+    GLuint VAO;
+    // Texture Setup
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
+    int width, height, bitDepth;
+
+    for (size_t i = 0; i < 6; i++)
+    {
+        unsigned char* texData = stbi_load(texPath[i], &width, &height, &bitDepth, 0);
+        if (!texData)
+        {
+            printf("Failed to find: %s\n", texPath[i]);
+            return;
+        }
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
+        stbi_image_free(texData);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+    // Mesh Setup
+    unsigned int skyboxIndices[] = {
+        // front
+        0, 1, 2,
+        2, 1, 3,
+        // right
+        2, 3, 5,
+        5, 3, 7,
+        // back
+        5, 7, 4,
+        4, 7, 6,
+        // left
+        4, 6, 0,
+        0, 6, 1,
+        // top
+        4, 0, 5,
+        5, 0, 2,
+        // bottom
+        1, 6, 3,
+        3, 6, 7
+    };
+
+    float skyboxVertices[] = {
+        -1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+        -1.0f, -1.0f, -1.0f,	0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+        1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+        1.0f, -1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+
+        -1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+        1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+        -1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+        1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f
+    };
+
+    GLuint numOfVertices = 64;
+    GLuint numOfIndices = 36;
+
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices[0]) * numOfIndices, skyboxIndices, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices[0]) * numOfVertices, skyboxVertices, GL_STATIC_DRAW);
+
+    GLsizei stride = sizeof(skyboxVertices[0]) * 8;
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(skyboxVertices[0]) * 3));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(skyboxVertices[0]) * 5));
+    glEnableVertexAttribArray(2);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+
+    Skybox skybox = { VAO,textureId,numOfIndices };
+}
+
+void DrawSkybox(Skybox skybox, Shader shader, Matrix view, Matrix projection)
+{
+    glDepthMask(GL_FALSE);
+
+    GLint uniformProjection = glGetUniformLocation(shader.id, "projection");
+    GLint uniformView = glGetUniformLocation(shader.id, "view");
+    GLint uniformSkybox= glGetUniformLocation(shader.id, "skybox");
+    SetShaderValueMatrix(shader, uniformProjection, projection);
+    SetShaderValueMatrix(shader, uniformView, view);
+    SetShaderValue(shader, uniformSkybox, (int[1]) { 0 }, UNIFORM_INT);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.textureId);
+
+
+    glBindVertexArray(skybox.VAO);
+    glDrawElements(GL_TRIANGLES, skybox.indexCount, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    glDepthMask(GL_TRUE);
+}
+
 // Returns current FPS
 // NOTE: We calculate an average framerate
 int GetFPS(void)

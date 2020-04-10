@@ -169,6 +169,7 @@
 #elif !defined(__cplusplus) && !defined(bool)
     typedef enum { false, true } bool;
 #endif
+#include <external\glad.h>
 
 // Vector2 type
 typedef struct Vector2 {
@@ -462,6 +463,12 @@ typedef struct VrDeviceInfo {
     float lensDistortionValues[4];  // HMD lens distortion constant parameters
     float chromaAbCorrection[4];    // HMD chromatic aberration correction parameters
 } VrDeviceInfo;
+
+typedef struct Skybox {
+    GLuint VAO;
+    GLuint textureId;
+    GLuint indexCount;
+} Skybox;
 
 //----------------------------------------------------------------------------------
 // Enumerators Definition
@@ -929,6 +936,7 @@ RLAPI Vector2 GetWorldToScreenEx(Vector3 position, Camera camera, int width, int
 RLAPI Vector2 GetWorldToScreen2D(Vector2 position, Camera2D camera); // Returns the screen space position for a 2d camera world space position
 RLAPI Vector2 GetScreenToWorld2D(Vector2 position, Camera2D camera); // Returns the world space position for a 2d camera screen space position
 
+
 // Timing-related functions
 RLAPI void SetTargetFPS(int fps);                                 // Set target FPS (maximum)
 RLAPI int GetFPS(void);                                           // Returns current FPS
@@ -937,6 +945,9 @@ RLAPI double GetTime(void);                                       // Returns ela
 RLAPI const char* GetRender(void);
 RLAPI void SetVsync(bool on);
 RLAPI void SetMSAA(unsigned int level);
+//Skybox
+RLAPI Skybox InitSkybox(const char* texPath[]);
+RLAPI void DrawSkybox(Skybox skybox,Shader shader, Matrix view, Matrix projection);
 
 // Color-related functions
 RLAPI int ColorToInt(Color color);                                // Returns hexadecimal value for a Color
@@ -1458,7 +1469,6 @@ RLAPI void StopAudioStream(AudioStream stream);                       // Stop au
 RLAPI void SetAudioStreamVolume(AudioStream stream, float volume);    // Set volume for audio stream (1.0 is max level)
 RLAPI void SetAudioStreamPitch(AudioStream stream, float pitch);      // Set pitch for audio stream (1.0 is base level)
 RLAPI void SetAudioStreamBufferSizeDefault(int size);                 // Default size for new audio streams
-
 //------------------------------------------------------------------------------------
 // Network (Module: network)
 //------------------------------------------------------------------------------------
