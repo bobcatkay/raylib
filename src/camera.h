@@ -276,6 +276,7 @@ void SetCameraMode(Camera camera, int mode)
 // TODO: Port to quaternion-based camera (?)
 void UpdateCamera(Camera *camera)
 {
+    float deltaPos = camera->speed * GetFrameTime();
     static int swingCounter = 0;    // Used for 1st person swinging movement
     static Vector2 previousMousePosition = { 0.0f, 0.0f };
 
@@ -418,16 +419,16 @@ void UpdateCamera(Camera *camera)
             camera->position.x += (sinf(CAMERA.angle.x)*direction[MOVE_BACK] -
                                    sinf(CAMERA.angle.x)*direction[MOVE_FRONT] -
                                    cosf(CAMERA.angle.x)*direction[MOVE_LEFT] +
-                                   cosf(CAMERA.angle.x)*direction[MOVE_RIGHT])/PLAYER_MOVEMENT_SENSITIVITY;
+                                   cosf(CAMERA.angle.x)*direction[MOVE_RIGHT])/PLAYER_MOVEMENT_SENSITIVITY * deltaPos ;
 
             camera->position.y += (sinf(CAMERA.angle.y)*direction[MOVE_FRONT] -
                                    sinf(CAMERA.angle.y)*direction[MOVE_BACK] +
-                                   1.0f*direction[MOVE_UP] - 1.0f*direction[MOVE_DOWN])/PLAYER_MOVEMENT_SENSITIVITY;
+                                   1.0f*direction[MOVE_UP] - 1.0f*direction[MOVE_DOWN])/PLAYER_MOVEMENT_SENSITIVITY * deltaPos;
 
             camera->position.z += (cosf(CAMERA.angle.x)*direction[MOVE_BACK] -
                                    cosf(CAMERA.angle.x)*direction[MOVE_FRONT] +
                                    sinf(CAMERA.angle.x)*direction[MOVE_LEFT] -
-                                   sinf(CAMERA.angle.x)*direction[MOVE_RIGHT])/PLAYER_MOVEMENT_SENSITIVITY;
+                                   sinf(CAMERA.angle.x)*direction[MOVE_RIGHT])/PLAYER_MOVEMENT_SENSITIVITY * deltaPos;
 
             // Camera orientation calculation
             CAMERA.angle.x += (mousePositionDelta.x*-CAMERA_MOUSE_MOVE_SENSITIVITY);
@@ -451,7 +452,7 @@ void UpdateCamera(Camera *camera)
 
             // Camera position update
             // NOTE: On CAMERA_FIRST_PERSON player Y-movement is limited to player 'eyes position'
-            camera->position.y = CAMERA.playerEyesPosition - sinf(swingCounter/CAMERA_FIRST_PERSON_STEP_TRIGONOMETRIC_DIVIDER)/CAMERA_FIRST_PERSON_STEP_DIVIDER;
+            camera->position.y = CAMERA.playerEyesPosition - sinf(swingCounter/CAMERA_FIRST_PERSON_STEP_TRIGONOMETRIC_DIVIDER)/CAMERA_FIRST_PERSON_STEP_DIVIDER * deltaPos;
 
             camera->up.x = sinf(swingCounter/(CAMERA_FIRST_PERSON_STEP_TRIGONOMETRIC_DIVIDER*2))/CAMERA_FIRST_PERSON_WAVING_DIVIDER;
             camera->up.z = -sinf(swingCounter/(CAMERA_FIRST_PERSON_STEP_TRIGONOMETRIC_DIVIDER*2))/CAMERA_FIRST_PERSON_WAVING_DIVIDER;
@@ -462,16 +463,16 @@ void UpdateCamera(Camera *camera)
             camera->position.x += (sinf(CAMERA.angle.x)*direction[MOVE_BACK] -
                                    sinf(CAMERA.angle.x)*direction[MOVE_FRONT] -
                                    cosf(CAMERA.angle.x)*direction[MOVE_LEFT] +
-                                   cosf(CAMERA.angle.x)*direction[MOVE_RIGHT])/PLAYER_MOVEMENT_SENSITIVITY;
+                                   cosf(CAMERA.angle.x)*direction[MOVE_RIGHT])/PLAYER_MOVEMENT_SENSITIVITY * deltaPos;
 
             camera->position.y += (sinf(CAMERA.angle.y)*direction[MOVE_FRONT] -
                                    sinf(CAMERA.angle.y)*direction[MOVE_BACK] +
-                                   1.0f*direction[MOVE_UP] - 1.0f*direction[MOVE_DOWN])/PLAYER_MOVEMENT_SENSITIVITY;
+                                   1.0f*direction[MOVE_UP] - 1.0f*direction[MOVE_DOWN])/PLAYER_MOVEMENT_SENSITIVITY * deltaPos;
 
             camera->position.z += (cosf(CAMERA.angle.x)*direction[MOVE_BACK] -
                                    cosf(CAMERA.angle.x)*direction[MOVE_FRONT] +
                                    sinf(CAMERA.angle.x)*direction[MOVE_LEFT] -
-                                   sinf(CAMERA.angle.x)*direction[MOVE_RIGHT])/PLAYER_MOVEMENT_SENSITIVITY;
+                                   sinf(CAMERA.angle.x)*direction[MOVE_RIGHT])/PLAYER_MOVEMENT_SENSITIVITY * deltaPos;
 
             // Camera orientation calculation
             CAMERA.angle.x += (mousePositionDelta.x*-CAMERA_MOUSE_MOVE_SENSITIVITY);

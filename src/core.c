@@ -902,7 +902,8 @@ void ToggleFullscreen(void)
 
         // Try to enable GPU V-Sync, so frames are limited to screen refresh rate (60Hz -> 60 FPS)
         // NOTE: V-Sync can be enabled by graphic driver configuration
-        if (CORE.Window.flags & FLAG_VSYNC_HINT) glfwSwapInterval(1);
+        if (CORE.Window.flags & FLAG_VSYNC_HINT) 
+            glfwSwapInterval(1);
     }
     else glfwSetWindowMonitor(CORE.Window.handle, NULL, CORE.Window.position.x, CORE.Window.position.y, CORE.Window.screen.width, CORE.Window.screen.height, GLFW_DONT_CARE);
 #endif
@@ -1633,6 +1634,27 @@ void SetTargetFPS(int fps)
     TRACELOG(LOG_INFO, "TIMER: Target time per frame: %02.03f milliseconds", (float)CORE.Time.target*1000);
 }
 
+void SetVsync(bool on)
+{
+    if (on){
+        glfwSwapInterval(1);
+    }
+    else {
+        glfwSwapInterval(0);
+    }
+}
+
+void SetMSAA(unsigned int level)
+{
+    if (level==0){
+        glDisable(GL_MULTISAMPLE);
+    }
+    else {
+        glfwWindowHint(GLFW_SAMPLES, level);
+        glEnable(GL_MULTISAMPLE);
+    }
+}
+
 // Returns current FPS
 // NOTE: We calculate an average framerate
 int GetFPS(void)
@@ -1656,8 +1678,12 @@ int GetFPS(void)
         history[index] = fpsFrame/FPS_CAPTURE_FRAMES_COUNT;
         average += history[index];
     }
-
     return (int)roundf(1.0f/average);
+}
+
+const char* GetRender(void)
+{
+    return glGetString(GL_RENDERER);
 }
 
 // Returns time in seconds for last frame drawn
@@ -2857,6 +2883,7 @@ static bool InitGraphicsDevice(int width, int height)
             glfwWindowHint(GLFW_AUTO_ICONIFY, 0);
         }
 #endif
+
         TRACELOG(LOG_WARNING, "SYSTEM: Closest fullscreen videomode: %i x %i", CORE.Window.display.width, CORE.Window.display.height);
 
         // NOTE: ISSUE: Closest videomode could not match monitor aspect-ratio, for example,
@@ -2950,6 +2977,10 @@ static bool InitGraphicsDevice(int width, int height)
 #if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI) || defined(PLATFORM_UWP)
     CORE.Window.fullscreen = true;
 
+    // Screen size security check
+    if (CORE.Window.screen.width <= 0) CORE.Window.screen.width = CORE.Window.display.width;
+    if (CORE.Window.screen.height <= 0) CORE.Window.screen.height = CORE.Window.display.height;
+
 #if defined(PLATFORM_RPI)
     bcm_host_init();
 
@@ -2963,7 +2994,8 @@ static bool InitGraphicsDevice(int width, int height)
 
     EGLint samples = 0;
     EGLint sampleBuffer = 0;
-    if (CORE.Window.flags & FLAG_MSAA_4X_HINT)
+
+    if(CORE.Window.flags & FLAG_MSAA_4X_HINT)
     {
         samples = 4;
         sampleBuffer = 1;
@@ -3152,10 +3184,8 @@ static bool InitGraphicsDevice(int width, int height)
     eglQuerySurface(CORE.Window.device, CORE.Window.surface, EGL_WIDTH, &CORE.Window.screen.width);
     eglQuerySurface(CORE.Window.device, CORE.Window.surface, EGL_HEIGHT, &CORE.Window.screen.height);
 
-#endif  // PLATFORM_UWP
-
-#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI)
-    EGLint numConfigs = 0;
+#else   // PLATFORM_ANDROID, PLATFORM_RPI
+    EGLint numConfigs;
 
     // Get an EGL device connection
     CORE.Window.device = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -3191,7 +3221,7 @@ static bool InitGraphicsDevice(int width, int height)
     // Create an EGL window surface
     //---------------------------------------------------------------------------------
 #if defined(PLATFORM_ANDROID)
-    EGLint displayFormat = 0;
+    EGLint displayFormat;
 
     // EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is guaranteed to be accepted by ANativeWindow_setBuffersGeometry()
     // As soon as we picked a EGLConfig, we can safely reconfigure the ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID
@@ -3209,10 +3239,6 @@ static bool InitGraphicsDevice(int width, int height)
 
 #if defined(PLATFORM_RPI)
     graphics_get_display_size(0, &CORE.Window.display.width, &CORE.Window.display.height);
-    
-    // Screen size security check
-    if (CORE.Window.screen.width <= 0) CORE.Window.screen.width = CORE.Window.display.width;
-    if (CORE.Window.screen.height <= 0) CORE.Window.screen.height = CORE.Window.display.height;
 
     // At this point we need to manage render size vs screen size
     // NOTE: This function use and modify global module variables: CORE.Window.screen.width/CORE.Window.screen.height and CORE.Window.render.width/CORE.Window.render.height and CORE.Window.screenScale

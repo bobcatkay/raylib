@@ -292,6 +292,7 @@ typedef struct Camera3D {
     Vector3 up;             // Camera up vector (rotation over its axis)
     float fovy;             // Camera field-of-view apperture in Y (degrees) in perspective, used as near plane width in orthographic
     int type;               // Camera type, defines projection type: CAMERA_PERSPECTIVE or CAMERA_ORTHOGRAPHIC
+    float speed;
 } Camera3D;
 
 typedef Camera3D Camera;    // Camera type fallback, defaults to Camera3D
@@ -475,7 +476,7 @@ typedef enum {
     FLAG_WINDOW_TRANSPARENT = 16,   // Set to allow transparent window
     FLAG_WINDOW_HIDDEN      = 128,  // Set to create the window initially hidden
     FLAG_WINDOW_ALWAYS_RUN  = 256,  // Set to allow windows running while minimized
-    FLAG_MSAA_4X_HINT       = 32,   // Set to try enabling MSAA 4X
+    FLAG_MSAA_4X_HINT = 32,   // Set to try enabling MSAA 4X
     FLAG_VSYNC_HINT         = 64    // Set to try enabling V-Sync on GPU
 } ConfigFlag;
 
@@ -933,6 +934,9 @@ RLAPI void SetTargetFPS(int fps);                                 // Set target 
 RLAPI int GetFPS(void);                                           // Returns current FPS
 RLAPI float GetFrameTime(void);                                   // Returns time in seconds for last frame drawn
 RLAPI double GetTime(void);                                       // Returns elapsed time in seconds since InitWindow()
+RLAPI const char* GetRender(void);
+RLAPI void SetVsync(bool on);
+RLAPI void SetMSAA(unsigned int level);
 
 // Color-related functions
 RLAPI int ColorToInt(Color color);                                // Returns hexadecimal value for a Color
